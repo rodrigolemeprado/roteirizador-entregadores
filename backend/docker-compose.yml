@@ -13,7 +13,7 @@ services:
     volumes:
       - ./data:/data:ro
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"   # só local; o VROOM acessa pela rede do compose
     restart: unless-stopped
 
   vroom:

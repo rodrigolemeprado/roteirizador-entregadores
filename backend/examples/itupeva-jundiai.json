@@ -1,0 +1,16 @@
+{
+  "vehicles": [
+    { "id": 1, "profile": "car", "start": [-47.0577, -23.1531], "end": [-47.0577, -23.1531] }
+  ],
+  "jobs": [
+    { "id": 1, "location": [-46.8844, -23.1857], "service": 120 },
+    { "id": 2, "location": [-46.9006, -23.2010], "service": 120 },
+    { "id": 3, "location": [-46.9120, -23.1650], "service": 120 },
+    { "id": 4, "location": [-46.8570, -23.2120], "service": 120 },
+    { "id": 5, "location": [-46.9580, -23.1520], "service": 120 },
+    { "id": 6, "location": [-47.0350, -23.1700], "service": 120 },
+    { "id": 7, "location": [-47.0750, -23.1380], "service": 120 },
+    { "id": 8, "location": [-46.8790, -23.1600], "service": 120 }
+  ],
+  "options": { "g": false }
+}

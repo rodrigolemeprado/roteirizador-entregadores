@@ -16,6 +16,8 @@ Serviço próprio, sem chaves de API e sem dados pessoais: recebe apenas coorden
 
    ```bash
    cd backend
+   # Região pronta: Itupeva + Jundiaí (baixa o Sudeste uma vez e recorta)
+   REGION=itupeva-jundiai ./scripts/prepare-map.sh
    # Opção A: baixar um .osm.pbf de região e recortar sua cidade (bbox: lon_min,lat_min,lon_max,lat_max)
    PBF_URL=<url do .osm.pbf no Geofabrik> BBOX=-46.83,-23.78,-46.36,-23.36 ./scripts/prepare-map.sh
    # Opção B: colocar manualmente backend/data/source.osm.pbf e rodar sem PBF_URL
@@ -30,7 +32,13 @@ Serviço próprio, sem chaves de API e sem dados pessoais: recebe apenas coorden
    docker compose up -d
    ```
 
-3. Teste:
+3. Teste (região Itupeva + Jundiaí, 8 paradas):
+
+   ```bash
+   curl -s localhost:8080/ -H 'Content-Type: application/json' -d @examples/itupeva-jundiai.json
+   ```
+
+   Ou, para outra região:
 
    ```bash
    curl -s localhost:8080/ -H 'Content-Type: application/json' -d '{
