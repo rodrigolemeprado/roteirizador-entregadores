@@ -42,7 +42,8 @@ export async function getOrCreateActiveRoute(): Promise<Route> {
 export async function listStops(routeId: number): Promise<Stop[]> {
   const db = await getDb();
   return db.getAllAsync<Stop>(
-    'SELECT * FROM stops WHERE route_id = ? ORDER BY COALESCE(seq, 1000000), label_number',
+    // Pendentes primeiro, na ordem otimizada; entregues/ausentes no fim.
+    "SELECT * FROM stops WHERE route_id = ? ORDER BY (status <> 'pending'), COALESCE(seq, 1000000), label_number",
     routeId,
   );
 }
@@ -94,4 +95,19 @@ export async function purgeFinishedRoutes(): Promise<number> {
     "DELETE FROM stops WHERE route_id IN (SELECT id FROM routes WHERE status = 'finished')",
   );
   return res.changes;
+}
+
+/**
+ * Grava a ordem (seq) e a previsão (eta, "HH:MM") das paradas numa única transação.
+ * `items` já vem na ordem de visita.
+ */
+export async function applyOptimization(routeId: number, items: { stopId: number; eta: string }[]) {
+  const db = await getDb();
+  await db.withTransactionAsync(async () => {
+    // Limpa a ordem anterior das pendentes (inclui as que ficaram fora da rota).
+    await db.runAsync("UPDATE stops SET seq = NULL, eta = NULL WHERE route_id = ? AND status = 'pending'", routeId);
+    for (let i = 0; i < items.length; i++) {
+      await db.runAsync('UPDATE stops SET seq = ?, eta = ? WHERE id = ?', i + 1, items[i].eta, items[i].stopId);
+    }
+  });
 }
