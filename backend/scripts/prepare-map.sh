@@ -1,27 +1,41 @@
 #!/usr/bin/env bash
 # Baixa um extrato OSM, (opcionalmente) recorta uma cidade e prepara os dados do OSRM (MLD).
 # Uso:
+#   REGION=itupeva-jundiai ./scripts/prepare-map.sh            # região pronta (abaixo)
 #   PBF_URL=<url do .osm.pbf> ./scripts/prepare-map.sh
-#   BBOX=-46.83,-23.78,-46.36,-23.36 ./scripts/prepare-map.sh   # recorta (requer osmium-tool)
-# Requer: docker, curl. Opcional: osmium (apt install osmium-tool).
+#   BBOX=-46.83,-23.78,-46.36,-23.36 ./scripts/prepare-map.sh   # recorta uma área
+# Requer: docker, curl. osmium é usado se instalado; senão roda via container.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 DATA_DIR="$PWD/data"
 mkdir -p "$DATA_DIR"
 
-# Padrão: extrato PEQUENO apenas para teste (Geofabrik: Brasil por região é grande,
-# ex.: sudeste-latest.osm.pbf tem GBs). Sugestão: baixe um extrato de região
-# (https://download.geofabrik.de/south-america/brazil.html) e recorte sua cidade com BBOX.
-# TODO: confirmar um extrato pequeno de teste; até lá defina PBF_URL explicitamente.
-PBF_URL="${PBF_URL:-}"
-BBOX="${BBOX:-}"                 # lon_min,lat_min,lon_max,lat_max
+# O Geofabrik só tem extratos por região (o Sudeste tem ~1 GB). O download é feito uma vez
+# e reaproveitado; o recorte por BBOX deixa o OSRM pequeno e rápido de preparar.
+REGION="${REGION:-}"
+case "$REGION" in
+  "") ;;
+  itupeva-jundiai)
+    # Itupeva + Jundiaí (SP), com margem para Louveira, Cabreúva e Várzea Paulista.
+    DEFAULT_PBF_URL="https://download.geofabrik.de/south-america/brazil/sudeste-latest.osm.pbf"
+    DEFAULT_BBOX="-47.20,-23.35,-46.78,-23.03"
+    ;;
+  *) echo "REGION desconhecida: $REGION" >&2; exit 1 ;;
+esac
+PBF_URL="${PBF_URL:-${DEFAULT_PBF_URL:-}}"
+BBOX="${BBOX:-${DEFAULT_BBOX:-}}"  # lon_min,lat_min,lon_max,lat_max
 PROFILE="${PROFILE:-car}"        # car | bicycle | foot
 OSRM_IMAGE="${OSRM_IMAGE:-ghcr.io/project-osrm/osrm-backend:latest}"
 
 if [[ -z "$PBF_URL" && ! -f "$DATA_DIR/source.osm.pbf" ]]; then
   echo "Defina PBF_URL (ou coloque backend/data/source.osm.pbf manualmente)." >&2
   exit 1
+fi
+
+if [[ -n "$PBF_URL" && -f "$DATA_DIR/source.osm.pbf" && -n "$REGION" ]]; then
+  echo ">> source.osm.pbf já existe; reutilizando (apague para baixar de novo)"
+  PBF_URL=""
 fi
 
 if [[ -n "$PBF_URL" ]]; then
@@ -31,9 +45,15 @@ fi
 
 SRC="source.osm.pbf"
 if [[ -n "$BBOX" ]]; then
-  command -v osmium >/dev/null || { echo "osmium não encontrado (apt install osmium-tool)." >&2; exit 1; }
   echo ">> Recortando bbox $BBOX"
-  osmium extract --bbox "$BBOX" --overwrite -o "$DATA_DIR/map.osm.pbf" "$DATA_DIR/source.osm.pbf"
+  if command -v osmium >/dev/null; then
+    osmium extract --bbox "$BBOX" --overwrite -o "$DATA_DIR/map.osm.pbf" "$DATA_DIR/source.osm.pbf"
+  else
+    # Sem osmium local: roda num container descartável.
+    docker run --rm -v "$DATA_DIR:/data" debian:stable-slim bash -c \
+      "apt-get update -qq && apt-get install -y -qq osmium-tool >/dev/null && \
+       osmium extract --bbox '$BBOX' --overwrite -o /data/map.osm.pbf /data/source.osm.pbf"
+  fi
 else
   cp -f "$DATA_DIR/source.osm.pbf" "$DATA_DIR/map.osm.pbf"
 fi
