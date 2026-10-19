@@ -49,10 +49,14 @@ if [[ -n "$BBOX" ]]; then
   if command -v osmium >/dev/null; then
     osmium extract --bbox "$BBOX" --overwrite -o "$DATA_DIR/map.osm.pbf" "$DATA_DIR/source.osm.pbf"
   else
-    # Sem osmium local: roda num container descartável.
-    docker run --rm -v "$DATA_DIR:/data" debian:stable-slim bash -c \
+    # Sem osmium local: roda num container descartável. Copia o .pbf para o disco do
+    # container antes: no WSL, ler o arquivo grande direto de /mnt/c falha com
+    # "Cannot allocate memory".
+    docker run --rm -v "$DATA_DIR:/data" debian:stable-slim bash -euc \
       "apt-get update -qq && apt-get install -y -qq osmium-tool >/dev/null && \
-       osmium extract --bbox '$BBOX' --overwrite -o /data/map.osm.pbf /data/source.osm.pbf"
+       cp /data/source.osm.pbf /tmp/source.osm.pbf && \
+       osmium extract --bbox '$BBOX' --overwrite -o /tmp/map.osm.pbf /tmp/source.osm.pbf && \
+       cp /tmp/map.osm.pbf /data/map.osm.pbf"
   fi
 else
   cp -f "$DATA_DIR/source.osm.pbf" "$DATA_DIR/map.osm.pbf"
