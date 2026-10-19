@@ -27,7 +27,7 @@ O entregador fotografa (ou dita/digita) o endereço de cada etiqueta, o app calc
 - **Backend:** VROOM + OSRM próprios sobre mapa OpenStreetMap (Docker).
 - **Navegação:** deep links para Waze / Google Maps.
 - **Assinatura (futuro):** RevenueCat.
-- **Login:** Google na v1; Sign in with Apple quando lançar no iOS. Provedor de autenticação a definir (ex.: Firebase Auth ou Supabase Auth). O backend valida o token antes de otimizar.
+- **Login:** Google na v1; Sign in with Apple quando lançar no iOS. Autenticação via **Firebase Auth** (plano grátis). O backend valida o ID token do Firebase antes de otimizar.
 
 ## Estrutura
 
