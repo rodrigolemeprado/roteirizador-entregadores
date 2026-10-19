@@ -1,0 +1,29 @@
+# Backend de otimização: OSRM (rotas/tempos sobre OSM) + VROOM (ordem das paradas).
+# Antes de subir, rode scripts/prepare-map.sh para gerar data/map.osrm*.
+services:
+  osrm:
+    image: ghcr.io/project-osrm/osrm-backend:latest
+    # Para trocar o perfil (car -> bicycle / moto):
+    #  1. Rode o prepare-map.sh com PROFILE=bicycle (usa /opt/bicycle.lua); o perfil
+    #     precisa ser o mesmo do osrm-extract. O OSRM não tem perfil "moto" oficial:
+    #     use car (ou copie e ajuste car.lua em um perfil próprio).
+    #  2. Em vroom-conf/config.yml, troque a chave "car" pelo mesmo nome de perfil
+    #     e ajuste "profile" nos veículos enviados pelo app (optimizer.ts).
+    command: osrm-routed --algorithm mld --max-table-size 500 /data/map.osrm
+    volumes:
+      - ./data:/data:ro
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+
+  vroom:
+    image: ghcr.io/vroom-project/vroom-docker:latest
+    depends_on:
+      - osrm
+    environment:
+      VROOM_ROUTER: osrm
+    volumes:
+      - ./vroom-conf:/conf
+    ports:
+      - "8080:3000"   # app usa EXPO_PUBLIC_API_URL=http://<host>:8080
+    restart: unless-stopped

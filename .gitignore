@@ -1,0 +1,31 @@
+# Node
+node_modules/
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+android/
+ios/
+
+# Segredos
+.env
+.env.*
+!.env.example
+
+# Backend: mapas e dados gerados
+backend/data/*.osm.pbf
+backend/data/*.osrm*
+
+# SO / editores
+.DS_Store
+.idea/
