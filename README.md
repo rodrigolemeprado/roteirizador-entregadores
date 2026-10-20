@@ -54,6 +54,16 @@ npx expo start      # abrir no Android (emulador ou Expo Go)
 npx tsc --noEmit    # checagem de tipos
 ```
 
+APK de teste (EAS Build, na nuvem do Expo):
+
+```bash
+cd app
+npx eas-cli login                                   # uma vez, conta Expo pessoal
+npx eas-cli build -p android --profile preview      # gera um .apk de instalação direta
+```
+
+O perfil `preview` grava `EXPO_PUBLIC_API_URL` (ver `eas.json`) e permite HTTP na rede local; o perfil `production` bloqueia HTTP e exige backend com HTTPS. O Expo Go da Play Store pode não suportar o SDK do projeto, então prefira o .apk.
+
 ## LGPD
 
 Os dados do destinatário (endereço, texto da etiqueta, código de barras) ficam apenas no SQLite do aparelho. O backend recebe somente coordenadas. As paradas de uma rota finalizada são apagadas (`purgeFinishedRoutes()`), ao finalizar e na abertura do app. Nenhuma chave de API no código.
