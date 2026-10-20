@@ -34,6 +34,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "owner": "rodrigolemeprado",
+    "extra": {
+      "eas": {
+        "projectId": "34975576-fe98-4af0-9831-e2159a354d2b"
+      }
     }
   }
 }
